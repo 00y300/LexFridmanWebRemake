@@ -10,18 +10,19 @@ import Store from "./pages/Store";
 
 const App = () => {
   return (
-    <>
+    <div className="h-screen bg-customBackground">
+      {/* <div> */}
       <NavBar />
       <Routes>
-        <Route path="/" element={<Homepage />}></Route>
-        <Route path="/lectures" element={<Lectures />}></Route>
-        <Route path="/podcast" element={<Podcast />}></Route>
-        <Route path="/youtube" element={<Youtube />}></Route>
-        <Route path="/twitter" element={<Twitter />}></Route>
-        <Route path="/contact" element={<Contact />}></Route>
-        <Route path="/store" element={<Store />}></Route>
+        <Route path="/" element={<Homepage />} />
+        <Route path="/lectures" element={<Lectures />} />
+        <Route path="/podcast" element={<Podcast />} />
+        <Route path="/youtube" element={<Youtube />} />
+        <Route path="/twitter" element={<Twitter />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/store" element={<Store />} />
       </Routes>
-    </>
+    </div>
   );
 };
 
