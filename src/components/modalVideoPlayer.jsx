@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import ImageCard from "./imageCard";
 
-const ModalCardVideo = ({ children, imgSrc, ...props }) => {
+const ModalCardVideo = ({ children, imgSrc, videoSrc, ...props }) => {
   const [isModalOpen, setModalOpen] = useState(false);
 
   const openModal = () => setModalOpen(true);
@@ -27,7 +27,7 @@ const ModalCardVideo = ({ children, imgSrc, ...props }) => {
             <div
               {...props}
               onClick={(e) => e.stopPropagation()} // Prevent background click within the Modal
-              className="relative w-full max-w-[90%] rounded-lg bg-white p-4 shadow-lg sm:max-w-md md:max-w-lg md:p-6 lg:max-w-2xl"
+              className="relative w-full max-w-[90%] rounded-lg bg-white p-4 shadow-lg sm:max-w-md md:max-w-lg md:p-6 lg:max-w-4xl"
             >
               {/* Close Button */}
               <button
@@ -39,11 +39,11 @@ const ModalCardVideo = ({ children, imgSrc, ...props }) => {
 
               {/* Modal Content */}
               <div className="flex flex-col items-center">
-                <img
-                  src={imgSrc}
-                  alt=""
-                  className="h-auto w-full rounded-lg object-cover"
-                />
+                <iframe
+                  className="aspect-video h-full w-full"
+                  allowFullScreen={true}
+                  src={videoSrc}
+                ></iframe>
                 <div className="mt-4 w-full text-left">{children}</div>
               </div>
             </div>
