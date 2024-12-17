@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 # img
 colorpalltes.md
+package-lock.json
