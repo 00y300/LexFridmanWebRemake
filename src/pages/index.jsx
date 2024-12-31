@@ -1,4 +1,4 @@
-import Hero from "../components/hero";
+import Hero from "../components/heroCom";
 
 const Homepage = () => {
   return (
@@ -7,7 +7,7 @@ const Homepage = () => {
         title="Lex Fridman"
         pronunciation="Freedman"
         description="Explore engaging conversations with industry leaders."
-        imgSrc="/img/lexFridmanPodcastThumbnail.jpg"
+        imgSrc="/lexFridmanPortrait.webp"
       />
     </>
   );
