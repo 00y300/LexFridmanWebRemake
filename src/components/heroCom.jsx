@@ -1,4 +1,5 @@
 import Image from "next/image";
+import ButtonsLink from "./buttonsLink";
 
 const Hero = ({ title, description, imgSrc }) => {
   return (
@@ -9,6 +10,19 @@ const Hero = ({ title, description, imgSrc }) => {
           {title}
         </h1>
         <p className="mt-2 text-gray-600 lg:text-lg">{description}</p>
+
+        {/* Button List */}
+        <ul className="space-y-4 pt-6">
+          <li>
+            <ButtonsLink title={"Lectures"} page={"/lectures"} />
+          </li>
+          <li>
+            <ButtonsLink title={"Podcast"} page={"/Podcast"} />
+          </li>
+          <li>
+            <ButtonsLink title={"Contact"} page={"/Contact"} />
+          </li>
+        </ul>
       </div>
 
       {/* Right Image Section */}
