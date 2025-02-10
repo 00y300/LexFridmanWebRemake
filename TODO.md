@@ -10,4 +10,7 @@
 ## Lectures Page 
 
 - [ ] Find a way on what API to use to pull the videos from a playlist. 
-- [ ] Maybe make a Golang API or even use the YouTube API.
+- [ ] Use the Youtube API Golang implementation and find a way on how to implement a GoLang Server -> Web App.
+    - [ ] First make a backend where it able to render something (it can be some text) to the NextJS framework
+    - [ ] Figure out how to pull videos and maybe a database of transcripts 
+
