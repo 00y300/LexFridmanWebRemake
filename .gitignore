@@ -27,3 +27,4 @@ colorpalltes.md
 package-lock.json
 .next
 flake.lock
+.env
