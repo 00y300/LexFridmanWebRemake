@@ -36,6 +36,8 @@
             delve
             gopls
             go-outline
+            atac
+            # golangci-lint
 
             tree
           ];
@@ -43,6 +45,7 @@
           # Add local node_modules/.bin to PATH
           shellHook = ''
             export PATH="$PWD/node_modules/.bin/:$PATH"
+            export ATAC_KEY_BINDINGS="./vim.toml"
             echo "🐢 Node.js $(node -v) and npm $(npm -v) are ready to use!"
             echo "💡 Remember: Locally installed tools in node_modules/.bin are now available globally in this shell."
           '';
