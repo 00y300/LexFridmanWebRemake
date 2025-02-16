@@ -1,3 +1,4 @@
+// This will responsible for adding a default layout for the web app.
 import "../styles/index.css";
 import NavBar from "../components/navBar"; // Import the NavBar component
 
