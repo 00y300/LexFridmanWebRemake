@@ -1,6 +1,6 @@
 // TODO: This will code setup the inital code for calling onto the Youtube API.
 
-package main
+package operations
 
 import (
 	"context"
