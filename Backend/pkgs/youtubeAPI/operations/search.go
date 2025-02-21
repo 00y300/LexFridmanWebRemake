@@ -1,9 +1,13 @@
-// TODO: This will code setup the inital code for calling onto the Youtube API.
+// This will code setup the inital code for calling onto the Youtube API.
+// The purpose of the this code is give a search quuery it return a results that match the query.
+
+// TODO: The goal will soon to be get to receive a custom search query as input and have more control of the result counter
 
 package operations
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -14,17 +18,23 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-// Flags for command-line arguments
+// Flags for command-line arguments.
 var (
 	query      = flag.String("query", "Google", "Search term")
 	maxResults = flag.Int64("max-results", 25, "Max YouTube results")
 )
 
+// SearchResults holds the videos and channels maps.
+type SearchResults struct {
+	Videos   map[string]string `json:"videos"`
+	Channels map[string]string `json:"channels"`
+}
+
 func main() {
-	// Parse command-line flags
+	// Parse command-line flags.
 	flag.Parse()
 
-	// Load environment variables from .env
+	// Load environment variables from .env.
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -34,24 +44,35 @@ func main() {
 		log.Fatal("GOOGLE_API key is not set in the .env file")
 	}
 
-	// Create a context
+	// Create a context.
 	ctx := context.Background()
 
-	// Create the YouTube service using the context and API key option
+	// Create the YouTube service using the context and API key option.
 	service, err := youtube.NewService(ctx, option.WithAPIKey(developerKey))
 	if err != nil {
 		log.Fatalf("Error creating new YouTube client: %v", err)
 	}
 
-	// Call the search function
+	// Call the search function.
 	videos, channels, err := searchYouTube(service, *query, *maxResults)
 	if err != nil {
 		log.Fatalf("Error searching YouTube: %v", err)
 	}
 
-	// Print out the results
-	printIDs("Videos", videos)
-	printIDs("Channels", channels)
+	// Combine the results.
+	results := SearchResults{
+		Videos:   videos,
+		Channels: channels,
+	}
+
+	// Marshal results to JSON.
+	jsonData, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		log.Fatalf("Error marshaling JSON: %v", err)
+	}
+
+	// Print the JSON output.
+	fmt.Println(string(jsonData))
 }
 
 // searchYouTube takes a YouTube service, a query string, and a max result count,
@@ -81,13 +102,4 @@ func searchYouTube(service *youtube.Service, q string, max int64) (map[string]st
 	}
 
 	return videos, channels, nil
-}
-
-// printIDs prints the ID and title of each result in a list.
-func printIDs(sectionName string, matches map[string]string) {
-	fmt.Printf("%v:\n", sectionName)
-	for id, title := range matches {
-		fmt.Printf("[%v] %v\n", id, title)
-	}
-	fmt.Println()
 }
