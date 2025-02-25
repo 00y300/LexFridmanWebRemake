@@ -8,22 +8,22 @@ const NavBar = () => {
           <Link href="/">Home</Link>
         </li>
         <li className="border-2 p-2">
-          <Link href="/lectures">Lectures</Link>
+          <Link href="/Lectures">Lectures</Link>
         </li>
         <li className="border-2 p-2">
-          <Link href="/podcast">Podcast</Link>
+          <Link href="/Podcast">Podcast</Link>
         </li>
         <li className="border-2 p-2">
-          <Link href="/youtube">YouTube</Link>
+          <Link href="/Youtube">YouTube</Link>
         </li>
         <li className="border-2 p-2">
-          <Link href="/twitter">X Twitter</Link>
+          <Link href="/Twitter">X Twitter</Link>
         </li>
         <li className="border-2 p-2">
-          <Link href="/contact">Contact Lex</Link>
+          <Link href="/Contact">Contact Lex</Link>
         </li>
         <li className="border-2 p-2">
-          <Link href="/store">Store</Link>
+          <Link href="/Store">Store</Link>
         </li>
       </ul>
     </div>

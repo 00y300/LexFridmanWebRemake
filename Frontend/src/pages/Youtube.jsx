@@ -1,9 +1,34 @@
-const Youtube = () => {
+import { useEffect, useState } from "react";
+
+export default function VideoList() {
+  const [videos, setVideos] = useState([]); // will hold an array of [id, title] pairs
+
+  useEffect(() => {
+    fetch("http://localhost:8000/yt")
+      .then((res) => res.json())
+      .then((data) => {
+        // data = { videos: { "id1": "title1", "id2": "title2", ... }, channels: { ... } }
+        const videoEntries = Object.entries(data.videos);
+        // videoEntries = [ [id1, title1], [id2, title2], ... ]
+        setVideos(videoEntries);
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <div>
-      <h1>This is where the Youtube will be</h1>
+      {videos.map(([id, title]) => (
+        <iframe
+          key={id}
+          width="560"
+          height="315"
+          src={`https://www.youtube.com/embed/${id}`}
+          title={title}
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      ))}
     </div>
   );
-};
-
-export default Youtube;
+}
