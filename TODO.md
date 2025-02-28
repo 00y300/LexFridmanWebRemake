@@ -35,6 +35,7 @@ This document outlines our tasks for building a NextJS web application with a Go
     - [x] Create a basic Golang backend that renders a simple text response to verify connectivity with NextJS.
   - [ ] **Video Data Retrieval**
     - [x] Implement logic to pull videos using the YouTube API.
+    - [~] Implte the logic to pull playlist given either a Youtube Channel or ID of the Youtube Channel.
     - [ ] Explore database options to store video transcripts.
   
 - [ ] **Frontend & API Communication**
