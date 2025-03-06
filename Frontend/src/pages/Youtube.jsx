@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 
 export default function VideoList() {
-  const [videos, setVideos] = useState([]); // will hold an array of [id, title] pairs
+  const [videos, setVideos] = useState([]);
 
   useEffect(() => {
     fetch("http://localhost:8000/yt")
       .then((res) => res.json())
       .then((data) => {
-        // data = { videos: { "id1": "title1", "id2": "title2", ... }, channels: { ... } }
         const videoEntries = Object.entries(data.videos);
-        // videoEntries = [ [id1, title1], [id2, title2], ... ]
         setVideos(videoEntries);
       })
       .catch(console.error);

@@ -6,68 +6,61 @@
 package operations
 
 import (
+	"Backend/pkgs/youtubeAPI/settings"
 	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"os"
 
-	"github.com/joho/godotenv"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
 
-// Command-line flags allow the user to override the default search term
-// and the maximum number of results returned from YouTube.
+// Command-line flags allow the user to override the default search query and result limit.
 var (
 	searchQuery = flag.String("query", "Google", "Search term to use when querying YouTube")
 	resultLimit = flag.Int64("max-results", 25, "Maximum number of results to return from YouTube")
 )
 
 // SearchResults holds the results of a YouTube search.
-// Videos and Channels maps have IDs as keys and their corresponding titles as values.
+// 'Videos' and 'Channels' are maps where the keys are IDs and the values are titles.
 type SearchResults struct {
 	Videos   map[string]string `json:"videos"`
 	Channels map[string]string `json:"channels"`
 }
 
-// SearchYouTubeAPI initializes the YouTube API client, performs a search
-// using the command-line provided query, and returns the results as a JSON string.
+// SearchYouTubeAPI initializes the YouTube client, performs a search using the specified query,
+// and returns the results (videos and channels) as a prettified JSON string.
 func SearchYouTubeAPI() (string, error) {
-	// Parse command-line flags. (Call once in the application lifecycle.)
+	// Parse command-line flags (if not already parsed in main).
 	flag.Parse()
 
-	// Load environment variables from a .env file.
-	if err := godotenv.Load(".env"); err != nil {
-		return "", fmt.Errorf("error loading .env file: %v", err)
+	// Retrieve the YouTube API key from the environment using the config helper.
+	apiKey, err := settings.GetAPIKey()
+	if err != nil {
+		return "", err
 	}
 
-	// Retrieve the YouTube API key from the environment.
-	apiKey := os.Getenv("GOOGLE_API")
-	if apiKey == "" {
-		return "", fmt.Errorf("GOOGLE_API key is not set in the .env file")
-	}
-
-	// Create a new YouTube service client with the provided API key.
+	// Create a new YouTube service client.
 	ctx := context.Background()
 	service, err := youtube.NewService(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
 		return "", fmt.Errorf("error creating YouTube client: %v", err)
 	}
 
-	// Fetch videos and channels using the helper function.
+	// Perform the search to fetch videos and channels.
 	videos, channels, err := fetchSearchResults(service, *searchQuery, *resultLimit)
 	if err != nil {
 		return "", fmt.Errorf("error searching YouTube: %v", err)
 	}
 
-	// Package the search results into a struct.
+	// Package the results into a SearchResults struct.
 	results := SearchResults{
 		Videos:   videos,
 		Channels: channels,
 	}
 
-	// Marshal the results struct into a prettified JSON string.
+	// Marshal the results struct into an indented JSON string.
 	jsonData, err := json.MarshalIndent(results, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("error marshaling JSON: %v", err)
@@ -76,10 +69,10 @@ func SearchYouTubeAPI() (string, error) {
 	return string(jsonData), nil
 }
 
-// fetchSearchResults sends a search request to the YouTube API using the given query and limit.
-// It returns two maps: one for videos and one for channels (with their IDs and titles).
+// fetchSearchResults sends a search request to the YouTube API using the given query and limit,
+// and returns two maps: one for videos and one for channels (with their IDs and titles).
 func fetchSearchResults(service *youtube.Service, query string, limit int64) (map[string]string, map[string]string, error) {
-	// Build the API call with required parts: "id" and "snippet".
+	// Build the API request with "id" and "snippet" parts.
 	call := service.Search.List([]string{"id", "snippet"}).
 		Q(query).         // Set the search query.
 		MaxResults(limit) // Set the maximum number of results.
@@ -90,11 +83,11 @@ func fetchSearchResults(service *youtube.Service, query string, limit int64) (ma
 		return nil, nil, err
 	}
 
-	// Initialize maps to store video and channel results.
+	// Prepare maps to store video and channel results.
 	videos := make(map[string]string)
 	channels := make(map[string]string)
 
-	// Loop over each returned item and add it to the correct map.
+	// Loop through each item in the response and store it based on its type.
 	for _, item := range response.Items {
 		switch item.Id.Kind {
 		case "youtube#video":
@@ -107,15 +100,16 @@ func fetchSearchResults(service *youtube.Service, query string, limit int64) (ma
 	return videos, channels, nil
 }
 
-// FetchChannelPlaylists searches for a channel by name and retrieves all its playlists.
-// It returns the channel ID along with a map of playlist IDs to their titles.
+// FetchChannelPlaylists searches for a channel using the provided query,
+// then retrieves and returns the channel's ID along with its playlists (ID and title).
 func FetchChannelPlaylists(service *youtube.Service, query string, limit int64) (string, map[string]string, error) {
-	// Search for the channel that matches the provided query.
+	// Build a search request to find the channel (type "channel").
 	channelSearchCall := service.Search.List([]string{"id", "snippet"}).
 		Q(query).        // Set the channel search query.
-		Type("channel"). // Restrict the search to channels.
-		MaxResults(1)    // We only need one matching channel.
+		Type("channel"). // Restrict results to channels.
+		MaxResults(1)    // We only need the first match.
 
+	// Execute the channel search request.
 	channelSearchResponse, err := channelSearchCall.Do()
 	if err != nil {
 		return "", nil, fmt.Errorf("error searching for channel: %v", err)
@@ -124,19 +118,21 @@ func FetchChannelPlaylists(service *youtube.Service, query string, limit int64) 
 		return "", nil, fmt.Errorf("no channel found for query: %s", query)
 	}
 
-	// Extract the channel ID from the first search result.
+	// Extract the channel ID from the first result.
 	channelID := channelSearchResponse.Items[0].Id.ChannelId
 
-	// Retrieve the playlists for the identified channel using its channel ID.
+	// Build a request to fetch playlists for the identified channel.
 	playlistsCall := service.Playlists.List([]string{"id", "snippet"}).
-		ChannelId(channelID). // Set the channel ID to retrieve playlists.
+		ChannelId(channelID). // Set the channel ID.
 		MaxResults(limit)     // Limit the number of playlists returned.
+
+	// Execute the playlists request.
 	playlistsResponse, err := playlistsCall.Do()
 	if err != nil {
 		return channelID, nil, fmt.Errorf("error fetching playlists: %v", err)
 	}
 
-	// Create a map to hold playlist IDs and their corresponding titles.
+	// Prepare a map to store playlist IDs and their titles.
 	playlists := make(map[string]string)
 	for _, item := range playlistsResponse.Items {
 		playlists[item.Id] = item.Snippet.Title
@@ -145,26 +141,22 @@ func FetchChannelPlaylists(service *youtube.Service, query string, limit int64) 
 	return channelID, playlists, nil
 }
 
-// ChannelPlaylistsResponse represents the JSON structure for channel playlists responses.
+// ChannelPlaylistsResponse defines the JSON structure for the playlists response.
 type ChannelPlaylistsResponse struct {
 	ChannelID string            `json:"channel_id"`
 	Playlists map[string]string `json:"playlists"`
 }
 
-// GetChannelPlaylistsJSON is a helper function that:
-// 1. Loads environment variables and creates a YouTube service client.
-// 2. Calls FetchChannelPlaylists to get the channel's playlists.
-// 3. Returns the channel ID and playlists as a formatted JSON string.
+// GetChannelPlaylistsJSON is a convenience function that:
+//  1. Retrieves the API key using the config helper.
+//  2. Creates a YouTube service client.
+//  3. Fetches the channel's playlists using the provided channel name and result limit.
+//  4. Returns a JSON-encoded string containing the channel ID and playlists.
 func GetChannelPlaylistsJSON(channelName string, max int64) (string, error) {
-	// Load the .env file to get the API key.
-	if err := godotenv.Load(".env"); err != nil {
-		return "", fmt.Errorf("error loading .env file: %v", err)
-	}
-
-	// Retrieve the API key from the environment.
-	apiKey := os.Getenv("GOOGLE_API")
-	if apiKey == "" {
-		return "", fmt.Errorf("GOOGLE_API key is not set in the .env file")
+	// Retrieve the API key using the config helper.
+	apiKey, err := settings.GetAPIKey()
+	if err != nil {
+		return "", err
 	}
 
 	// Create a new YouTube service client.
@@ -174,19 +166,19 @@ func GetChannelPlaylistsJSON(channelName string, max int64) (string, error) {
 		return "", fmt.Errorf("error creating YouTube client: %v", err)
 	}
 
-	// Fetch the channel ID and its playlists using the provided channel name.
+	// Fetch the channel ID and its playlists.
 	channelID, playlists, err := FetchChannelPlaylists(service, channelName, max)
 	if err != nil {
 		return "", err
 	}
 
-	// Package the results into a response struct.
+	// Package the response into a ChannelPlaylistsResponse struct.
 	resp := ChannelPlaylistsResponse{
 		ChannelID: channelID,
 		Playlists: playlists,
 	}
 
-	// Marshal the response struct into an indented JSON string.
+	// Marshal the struct into an indented JSON string.
 	jsonData, err := json.MarshalIndent(resp, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("error marshaling JSON: %v", err)
