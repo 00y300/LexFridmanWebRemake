@@ -26,6 +26,9 @@
 
         # Enables use of `nix develop`
         devShell = pkgs.mkShell {
+
+          hardeningDisable = [ "fortify" ];
+
           buildInputs = with pkgs; [
             nodejs
             eslint_d
