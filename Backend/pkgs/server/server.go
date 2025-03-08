@@ -1,7 +1,7 @@
 package server
 
 import (
-	"Backend/pkgs/youtubeAPI/operations" // <-- Adjust import path as needed
+	"Backend/pkgs/youtubeAPI/operations"
 	"flag"
 	"fmt"
 	"log"
@@ -17,7 +17,7 @@ func podcastHandler(w http.ResponseWriter, r *http.Request) {
 // YoutubeSearchHandle handles GET requests to the /yt route.
 func YoutubeSearchHandle(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		// Call the YouTube search function
+		// Call the YouTube search function (make sure this function exists in your operations package)
 		jsonData, err := operations.SearchYouTubeAPI()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -27,7 +27,6 @@ func YoutubeSearchHandle(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(jsonData))
 		return
 	}
-
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
@@ -65,6 +64,34 @@ func YoutubeChannelPlaylistsHandle(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(jsonData))
 }
 
+// YoutubePlaylistVideosHandle handles GET requests to /yt/playlist,
+// returning all videos from a given playlist as JSON.
+// It expects query parameters: ?channel=<channelID>&playlist=<playlistID>
+func YoutubePlaylistVideosHandle(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract query parameters for channel and playlist IDs.
+	channelID := r.URL.Query().Get("channel")
+	playlistID := r.URL.Query().Get("playlist")
+	if channelID == "" || playlistID == "" {
+		http.Error(w, "Missing 'channel' or 'playlist' query parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Call the helper to fetch all videos in the playlist as JSON.
+	jsonData, err := operations.FetchAllVideosAsJSON(channelID, playlistID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error fetching playlist videos: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(jsonData))
+}
+
 // defaultHandler is a fallback handler for other routes.
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hi there, I love " + r.URL.Path[1:] + "!"))
@@ -73,12 +100,13 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 // corsMiddleware sets the CORS headers for each request.
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Allow all origins and specific methods/headers.
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
+		// Handle preflight OPTIONS requests.
 		if r.Method == http.MethodOptions {
-			// Handle preflight OPTIONS request quickly and return
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -92,25 +120,19 @@ func StartServer() {
 
 	mux := http.NewServeMux()
 
-	// Register the /podcast route
+	// Register route handlers.
 	mux.HandleFunc("/podcast", podcastHandler)
-
-	// Register the /yt route (search results)
 	mux.HandleFunc("/yt", YoutubeSearchHandle)
-
-	// Register the /yt/playlists route
 	mux.HandleFunc("/yt/playlists", YoutubeChannelPlaylistsHandle)
-
-	// Register a default handler for all other routes
+	mux.HandleFunc("/yt/playlist", YoutubePlaylistVideosHandle)
 	mux.HandleFunc("/", defaultHandler)
 
-	// Wrap the mux with the CORS middleware
+	// Apply CORS middleware.
 	handlerWithCORS := corsMiddleware(mux)
-
 	addr := ":" + *port
 	log.Printf("Starting server on %s", addr)
 
-	// Listen and serve
+	// Start listening and serving requests.
 	if err := http.ListenAndServe(addr, handlerWithCORS); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
